@@ -30,10 +30,10 @@ class TF:
         enum_rows = np.linspace(0, num_rows - 1, num_rows)
         enum_cols = np.linspace(0, num_cols - 1, num_cols)
         col_iter, row_iter = np.meshgrid(enum_cols, enum_rows)
-        half_size = num_rows / 2 - 1  # here we assume num_rows = num_columns
+        half_size = num_rows / 2   # here we assume num_rows = num_columns
 
         # low pass filter mask
-        low_pass_mask = np.zeros_like(self.image_gray)
+        maskt = np.zeros_like(self.image_gray)
         freq_cut_off = 0.3  # it should less than 1
         radius_cut_off = int(freq_cut_off * half_size)
 
@@ -45,15 +45,13 @@ class TF:
                 (row_iter - half_size) / (-col_iter + half_size))) & (
                                  self.theta + self.deltatheta >= 90 + (180 / np.pi) * np.arctan(
                              (row_iter - half_size) / (-col_iter + half_size)))
-        low_pass_mask[idx_lp] = 1
-        # high pass filter mask
-        high_pass_mask = np.zeros_like(self.image_gray)
-        freq_cut_off = 0.1  # it should less than 1
-        radius_cut_off = int(freq_cut_off * half_size)
-        idx_hp = np.sqrt((col_iter - half_size) ** 2 + (row_iter - half_size) ** 2) > radius_cut_off
-        high_pass_mask[idx_hp] = 1
+        idx_lp[int(half_size),int(half_size)]=1
+        maskt[idx_lp] = 1
+        maskt[int(half_size),int(half_size)]=1
+
         # filtering via FFT
-        mask = low_pass_mask  # can also use high or band pass mask
+        mask = maskt  # can also use high or band pass mask
+
         fft_filtered = image_gray_fft_shift * mask
         image_filtered = np.fft.ifft2(np.fft.fftshift(fft_filtered))
         image_filtered = np.absolute(image_filtered)
@@ -63,3 +61,4 @@ class TF:
         cv2.imshow("Filtered image", image_filtered)
         cv2.waitKey(0)
         return(image_filtered)
+
